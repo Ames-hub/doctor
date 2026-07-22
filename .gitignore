@@ -1,0 +1,5 @@
+venv
+settings.json
+database.db
+logs
+__pycache__
