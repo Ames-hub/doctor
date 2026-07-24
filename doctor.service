@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/opt/doctor
-ExecStart=/opt/doctor/venv/bin/python /opt/doctor/doctor.py
+ExecStart=/opt/doctor/venv/bin/python /opt/doctor/main.py
 Restart=on-failure
 RestartSec=5
 
