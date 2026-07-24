@@ -3,7 +3,6 @@ from datetime import datetime
 from library import errors
 import importlib
 import logging
-import uuid
 import os
 
 checks = []
@@ -35,9 +34,6 @@ for checks_root, _, files in os.walk("checks"):
             except Exception as err:
                 logging.error(f"Error when attempting to load a check at \"{path}\"", exc_info=err)
                 continue
-
-def gen_pc_uuid():
-    return settings.pc_uuid4().set(str(uuid.uuid4()))
 
 def diagnose() -> dict:
     """

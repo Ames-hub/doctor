@@ -1,0 +1,14 @@
+[Unit]
+Description=Doctor Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/doctor
+ExecStart=/bin/bash -c 'exec "$(command -v python3.13)" /opt/doctor/main.py'
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

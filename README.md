@@ -13,8 +13,9 @@ On a side note, I believe this can help many users. I myself, while programming 
 # Installation
 Run this command:
 ```
-DO NOT FORGET TO PUT INSTALL COMMAND HERE
+curl -fsSL https://raw.githubusercontent.com/ames-hub/doctor/main/install.sh | sudo bash
 ```
+If you wish to review what this command does, please see in the project root: `./install.sh`
 
 # Requirements
 ### Systemd

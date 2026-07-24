@@ -12,7 +12,7 @@ import os
 create_tables()
 
 if not settings.pc_uuid4().get():
-    doctor.gen_pc_uuid()
+    settings.pc_uuid4().gen_new_uuid()
 
 os.makedirs("logs", exist_ok=True)
 logging.basicConfig(
@@ -41,7 +41,7 @@ async def main_loop():
         logging.info(f"Beginning a check at timestamp {datetime.datetime.now().timestamp()}")
         system_report = doctor.diagnose()
         translation = ui.translate_report(system_report)
-        await ui.alert_user(translation)
+        await ui.send_alert(translation)
         logging.info(f"Check concluded at timestamp {datetime.datetime.now().timestamp()}")
         await asyncio.sleep(HALF_DAY)
 

@@ -1,3 +1,4 @@
+import uuid
 import json
 import os
 
@@ -51,12 +52,13 @@ class settings:
     class pc_uuid4(BaseSetting):
         def __init__(self):
             super().__init__("pc_uuid4", None)
-    # This is a setting to determine how we notify users. Headless means either there's no desktop, or nobody ever checks it.
-    # If its headless, and hub mode is enabled, we send it to the hub. The difference between this and hub mode is, on hub mode, 
-    # if it was not headless, we would still notify the user. 
-    class headless(BaseSetting):
+
+        def gen_new_uuid(self):
+            return self.set(str(uuid.uuid4()))
+    # This is a setting to determine how we notify users. Unattended means either there's no desktop, or nobody ever checks it.
+    class unattended(BaseSetting):
         def __init__(self):
-            super().__init__("headless", False)
+            super().__init__("unattended", False)
     # This setting is for critical services that are not included in the original list.
     class extra_critical_services(BaseSetting):
         def __init__(self):

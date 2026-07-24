@@ -110,16 +110,7 @@ def find_dbus_socket():
     logging.warning("Could not find DBus session address")
     return None, original_user
 
-async def alert_user(report: dict):
-    """
-    Sends alerts to the user's OS in a form of pop-up notifications.
-    """
-    if shutil.which("notify-send") is None:
-        if not settings.headless().get():
-            raise errors.missing_notifysend
-        else:
-            raise NotImplementedError("HUB mode still needs to be implemented.")
-    
+def _gui_alert(report: dict):
     dbus_addr, original_user = find_dbus_socket()
     
     # Get the user's display
@@ -178,3 +169,16 @@ async def alert_user(report: dict):
                 subprocess.run(fallback_cmd, check=False, capture_output=True)
             except Exception as err:
                 logging.error("Fallback notification also failed", exc_info=err)
+
+async def send_alert(report: dict):
+    """
+    Sends alerts to the user's OS in a form of pop-up notifications.
+    """
+    if not settings.unattended().get():
+        if shutil.which("notify-send") is None:
+            raise errors.missing_notifysend
+        else:
+            _gui_alert(report)
+    else:
+        raise NotImplementedError("HUB mode still needs to be implemented.")
+        
