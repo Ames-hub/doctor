@@ -12,16 +12,6 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-read -rp "This will install packages, clone a repository to ${INSTALL_DIR}, and set up a systemd service. Continue? [y/N] " CONFIRM
-case "$CONFIRM" in
-    [yY][eE][sS]|[yY])
-        ;;
-    *)
-        echo "Installation cancelled."
-        exit 0
-        ;;
-esac
-
 # Install notify-send, dmesg and smartctl
 echo "Installing dependencies..."
 apt update
