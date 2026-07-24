@@ -48,7 +48,7 @@ apt update
 apt install -y libnotify-bin util-linux smartmontools git python3.13-venv
 
 # Clone repository
-if [ -d "$INSTALL_DIR" ]; then
+if [ -f "$INSTALL_DIR/main.py" ]; then
     echo "$INSTALL_DIR already exists."
     echo "1) Clean reinstall (delete and re-clone)"
     echo "2) Update (pull latest changes)"
