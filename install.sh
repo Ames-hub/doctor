@@ -17,22 +17,35 @@ echo "Checking Python version..."
 
 PYTHON_BIN=""
 
-for version in 3.13 3.14 3.15; do
-    if command -v python$version &> /dev/null; then
-        PYTHON_BIN=$(command -v python$version)
+PYTHON_LOCATIONS=(
+    "python3.13"
+    "/usr/bin/python3.13"
+    "/usr/local/bin/python3.13"
+    "/home/linuxbrew/.linuxbrew/bin/python3.13"
+)
+
+for python in "${PYTHON_LOCATIONS[@]}"; do
+    if command -v "$python" &> /dev/null || [ -x "$python" ]; then
+        PYTHON_BIN=$(command -v "$python" 2>/dev/null || echo "$python")
         break
     fi
 done
 
 if [ -z "$PYTHON_BIN" ]; then
-    echo "Error: Python 3.13 or newer is required."
+    echo "Error: Python 3.13 is required."
     echo "No compatible Python installation found."
     exit 1
 fi
 
 PYTHON_VERSION=$("$PYTHON_BIN" -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
 
-echo "Found new enough Python: $PYTHON_BIN (Python $PYTHON_VERSION)"
+if [ "$PYTHON_VERSION" != "3.13" ]; then
+    echo "Error: Python 3.13 is required."
+    echo "Found Python $PYTHON_VERSION at $PYTHON_BIN"
+    exit 1
+fi
+
+echo "Found Python 3.13: $PYTHON_BIN"
 
 # Install dependencies
 echo "Installing system dependencies..."
