@@ -45,7 +45,7 @@ fi
 echo "Installing dependencies..."
 
 apt update
-apt install -y libnotify-bin util-linux smartmontools git
+apt install -y libnotify-bin util-linux smartmontools git python3.13-venv
 
 # Clone repository
 if [ -d "$INSTALL_DIR" ]; then
