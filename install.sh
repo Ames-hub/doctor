@@ -15,7 +15,7 @@ fi
 # Install notify-send, dmesg and smartctl
 echo "Installing dependencies..."
 apt update
-apt install -y libnotify-bin util-linux smartmontools
+apt install -y libnotify-bin util-linux smartmontools, git
 
 # Clone the repository to /opt/doctor (handle existing install)
 if [ -d "$INSTALL_DIR" ]; then
