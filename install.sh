@@ -33,13 +33,6 @@ fi
 PYTHON_VERSION=$("$PYTHON_BIN" -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
 
 echo "Found new enough Python: $PYTHON_BIN (Python $PYTHON_VERSION)"
-echo "Creating Python virtual environment..."
-
-if ! "$PYTHON_BIN" -m venv "${INSTALL_DIR}/venv"; then
-    echo "Error: Failed to create Python virtual environment."
-    echo "Make sure the venv package for $PYTHON_BIN is installed."
-    exit 1
-fi
 
 # Install dependencies
 echo "Installing system dependencies..."
@@ -74,6 +67,14 @@ if [ -f "$INSTALL_DIR/main.py" ]; then
 else
     echo "Cloning repository..."
     git clone "https://${REPO_URL}" "$INSTALL_DIR"
+fi
+
+echo "Creating Python virtual environment..."
+
+if ! "$PYTHON_BIN" -m venv "${INSTALL_DIR}/venv"; then
+    echo "Error: Failed to create Python virtual environment."
+    echo "Make sure the venv package for $PYTHON_BIN is installed."
+    exit 1
 fi
 
 echo "Installing Python dependencies..."
