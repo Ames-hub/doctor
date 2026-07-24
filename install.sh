@@ -15,22 +15,24 @@ fi
 # Check Python version
 echo "Checking Python version..."
 
-if ! command -v python3 &> /dev/null; then
-    echo "Error: Python 3 is not installed."
-    exit 1
-fi
+PYTHON_BIN=""
 
-PYTHON_VERSION=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
-PYTHON_MAJOR=$(echo "$PYTHON_VERSION" | cut -d. -f1)
-PYTHON_MINOR=$(echo "$PYTHON_VERSION" | cut -d. -f2)
+for version in 3.13 3.14 3.15; do
+    if command -v python$version &> /dev/null; then
+        PYTHON_BIN=$(command -v python$version)
+        break
+    fi
+done
 
-if [ "$PYTHON_MAJOR" -lt 3 ] || { [ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -lt 13 ]; }; then
+if [ -z "$PYTHON_BIN" ]; then
     echo "Error: Python 3.13 or newer is required."
-    echo "Installed version: Python $PYTHON_VERSION"
+    echo "No compatible Python installation found."
     exit 1
 fi
 
-echo "Python $PYTHON_VERSION detected. Sufficient."
+PYTHON_VERSION=$("$PYTHON_BIN" -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
+
+echo "Found new enough Python: $PYTHON_BIN (Python $PYTHON_VERSION)"
 
 # Install notify-send, dmesg and smartctl
 echo "Installing dependencies..."

@@ -23,7 +23,7 @@ Doctor is intended as a systemd daemon, however it can be deployed using other s
 ### Journalctl
 Doctor uses Journalctl to discover various bits of system information, and is therefore required. Without this, doctor's quality of performance will be highly degraded.
 ### Python3.13
-This program requires Python3.13.12.<br>
+This program requires Python3.13.<br>
 Otherwise, `setup.sh` should install anything else needed.
 ### Super-user access
 As this system checks things like if the Kernel needs updating, it is required that this program runs as root. Either that, or you can delete the file "./checks/kernel_update.py" (and any others that need super user access)
