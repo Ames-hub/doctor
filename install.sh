@@ -33,12 +33,19 @@ fi
 PYTHON_VERSION=$("$PYTHON_BIN" -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
 
 echo "Found new enough Python: $PYTHON_BIN (Python $PYTHON_VERSION)"
+echo "Creating Python virtual environment..."
+
+if ! "$PYTHON_BIN" -m venv "${INSTALL_DIR}/venv"; then
+    echo "Error: Failed to create Python virtual environment."
+    echo "Make sure the venv package for $PYTHON_BIN is installed."
+    exit 1
+fi
 
 # Install dependencies
 echo "Installing dependencies..."
 
 apt update
-apt install -y libnotify-bin util-linux smartmontools git python3.13-venv
+apt install -y libnotify-bin util-linux smartmontools git
 
 # Clone repository
 if [ -d "$INSTALL_DIR" ]; then
@@ -68,16 +75,6 @@ else
     echo "Cloning repository..."
     git clone "https://${REPO_URL}" "$INSTALL_DIR"
 fi
-
-# Create Python virtual environment
-echo "Creating Python virtual environment..."
-
-"$PYTHON_BIN" -m venv "${INSTALL_DIR}/venv"
-
-echo "Installing Python dependencies..."
-
-"${INSTALL_DIR}/venv/bin/pip" install --upgrade pip
-"${INSTALL_DIR}/venv/bin/pip" install -r "${INSTALL_DIR}/requirements.txt"
 
 # Check if systemd is installed
 if ! command -v systemctl &> /dev/null; then
