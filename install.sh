@@ -34,12 +34,13 @@ PYTHON_VERSION=$("$PYTHON_BIN" -c 'import sys; print(".".join(map(str, sys.versi
 
 echo "Found new enough Python: $PYTHON_BIN (Python $PYTHON_VERSION)"
 
-# Install notify-send, dmesg and smartctl
+# Install dependencies
 echo "Installing dependencies..."
-apt update
-apt install -y libnotify-bin util-linux smartmontools git python3-venv
 
-# Clone the repository to /opt/doctor (handle existing install)
+apt update
+apt install -y libnotify-bin util-linux smartmontools git python3.13-venv
+
+# Clone repository
 if [ -d "$INSTALL_DIR" ]; then
     echo "$INSTALL_DIR already exists."
     echo "1) Clean reinstall (delete and re-clone)"
@@ -50,16 +51,9 @@ if [ -d "$INSTALL_DIR" ]; then
         1)
             echo "Removing existing installation..."
             rm -rf "$INSTALL_DIR"
+
             echo "Cloning repository..."
             git clone "https://${REPO_URL}" "$INSTALL_DIR"
-
-            echo "Creating Python virtual environment..."
-            "$PYTHON_BIN" -m venv "${INSTALL_DIR}/venv"
-
-            echo "Installing Python dependencies..."
-
-            "${INSTALL_DIR}/venv/bin/pip" install --upgrade pip
-            "${INSTALL_DIR}/venv/bin/pip" install -r "${INSTALL_DIR}/requirements.txt"
             ;;
         2)
             echo "Updating existing installation..."
@@ -75,6 +69,16 @@ else
     git clone "https://${REPO_URL}" "$INSTALL_DIR"
 fi
 
+# Create Python virtual environment
+echo "Creating Python virtual environment..."
+
+"$PYTHON_BIN" -m venv "${INSTALL_DIR}/venv"
+
+echo "Installing Python dependencies..."
+
+"${INSTALL_DIR}/venv/bin/pip" install --upgrade pip
+"${INSTALL_DIR}/venv/bin/pip" install -r "${INSTALL_DIR}/requirements.txt"
+
 # Check if systemd is installed
 if ! command -v systemctl &> /dev/null; then
     echo ""
@@ -86,14 +90,16 @@ if ! command -v systemctl &> /dev/null; then
     exit 0
 fi
 
-# Move doctor.service to the systemd services folder
+# Move doctor.service to systemd services folder
 if [ ! -f "${INSTALL_DIR}/${SERVICE_NAME}" ]; then
     echo "Error: ${INSTALL_DIR}/${SERVICE_NAME} not found. Cannot proceed."
     exit 1
 fi
 
 echo "Installing systemd service..."
+
 mv "${INSTALL_DIR}/${SERVICE_NAME}" "${SYSTEMD_DIR}/${SERVICE_NAME}"
+
 systemctl daemon-reload
 
 systemctl enable "$SERVICE_NAME"
