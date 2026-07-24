@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/opt/doctor
-ExecStart=/bin/bash -c 'exec "$(command -v python3.13)" /opt/doctor/main.py'
+ExecStart=/opt/doctor/venv/bin/python /opt/doctor/doctor.py
 Restart=on-failure
 RestartSec=5
 

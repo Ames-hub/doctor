@@ -37,7 +37,7 @@ echo "Found new enough Python: $PYTHON_BIN (Python $PYTHON_VERSION)"
 # Install notify-send, dmesg and smartctl
 echo "Installing dependencies..."
 apt update
-apt install -y libnotify-bin util-linux smartmontools git
+apt install -y libnotify-bin util-linux smartmontools git python3-venv
 
 # Clone the repository to /opt/doctor (handle existing install)
 if [ -d "$INSTALL_DIR" ]; then
@@ -52,6 +52,14 @@ if [ -d "$INSTALL_DIR" ]; then
             rm -rf "$INSTALL_DIR"
             echo "Cloning repository..."
             git clone "https://${REPO_URL}" "$INSTALL_DIR"
+
+            echo "Creating Python virtual environment..."
+            "$PYTHON_BIN" -m venv "${INSTALL_DIR}/venv"
+
+            echo "Installing Python dependencies..."
+
+            "${INSTALL_DIR}/venv/bin/pip" install --upgrade pip
+            "${INSTALL_DIR}/venv/bin/pip" install -r "${INSTALL_DIR}/requirements.txt"
             ;;
         2)
             echo "Updating existing installation..."
