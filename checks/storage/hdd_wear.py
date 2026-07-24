@@ -1,4 +1,5 @@
 from checks.library.storage.helpers import get_drives, is_hdd
+from checks.library.helpers import is_virtual_machine
 import subprocess
 
 DISPLAY_NAME = "HDD Reallocated Sectors Check"
@@ -6,6 +7,10 @@ LEVEL = 1
 
 def check():
     failure_data = []
+
+    if is_virtual_machine():
+        return (False, "Can't get the drives reallocated sectors as this is a virtual machine.")  # VMs don't have smart data.
+
     for drive in get_drives():
         # Skip non-HDD drives
         if not is_hdd(drive):

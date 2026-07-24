@@ -14,9 +14,11 @@ create_tables()
 if not settings.pc_uuid4().get():
     settings.pc_uuid4().gen_new_uuid()
 
-os.makedirs("logs", exist_ok=True)
+
+LOGGING_PATH = os.path.join(os.getcwd(), f"logs/{datetime.datetime.now().strftime("%Y-%m-%d")}.log")
+os.makedirs(os.path.join(os.getcwd(), ("logs")), exist_ok=True)
 logging.basicConfig(
-    filename=f"logs/{datetime.datetime.now().strftime("%Y-%m-%d")}.log",
+    filename=LOGGING_PATH,
     level=logging.INFO,
     format=""
 )

@@ -1,4 +1,5 @@
 from checks.library.storage.helpers import get_drives
+from checks.library.helpers import is_virtual_machine
 import subprocess
 
 DISPLAY_NAME = "Offline uncorrectable sectors"
@@ -6,6 +7,10 @@ LEVEL = 1
 
 def check():
     failure_data = []
+
+    if is_virtual_machine():
+        return (False, "Can't get the offline uncorrectable sectors for your drives, as this is a virtual machine.")
+
     for drive in get_drives():
         result = subprocess.run(
             ["smartctl", "-A", drive],

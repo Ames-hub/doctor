@@ -1,4 +1,5 @@
 from checks.library.storage.helpers import get_drives
+from checks.library.helpers import is_virtual_machine
 import subprocess
 import logging
 import os
@@ -11,6 +12,9 @@ def check():
     Returns (healthy, message)
     healthy=True means no failed SMART self-tests detected.
     """
+
+    if is_virtual_machine():
+        return (False, "Can't get the SMART Self-test data as this is run on a virtual machine.")
 
     failure_data = []
     for drive in get_drives():

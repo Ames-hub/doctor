@@ -1,5 +1,6 @@
 from checks.library.storage.life_prediction import drive as drv
 from checks.library.storage.helpers import get_drives
+from checks.library.helpers import is_virtual_machine
 import subprocess
 from datetime import datetime
 
@@ -12,6 +13,9 @@ def check():
     """    
     # Now. Funny story. Writing this check is what got me to realise my boot SSD has 11% life left.
     # This is why I am writing doctor, nothing warned me of this!
+    if is_virtual_machine():
+        return (False, "Can't predict drive failure on Virtual Machines.")
+
     failure_data = []
     for drive_name in get_drives():
         drive = drv(drive_name)

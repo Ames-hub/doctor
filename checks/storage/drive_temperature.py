@@ -1,4 +1,5 @@
 from checks.library.storage.helpers import get_drives
+from checks.library.helpers import is_virtual_machine
 import subprocess
 
 DISPLAY_NAME = "Drive temperature"
@@ -14,6 +15,9 @@ TEMP_FIELDS = [
 def check():
     # Note: This check can misbehave if the drive is measuring in fahrenheit.
     failure_data = []
+
+    if is_virtual_machine():
+        return (False, "Can't get the drive temperature as we are in a virtual machine.")
 
     for drive in get_drives():
         result = subprocess.run(

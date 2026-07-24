@@ -1,10 +1,14 @@
 from checks.library.storage.helpers import get_drives
+from checks.library.helpers import is_virtual_machine
 import subprocess
 
 DISPLAY_NAME = "SSD Pending Sectors"
 LEVEL = 2
 
 def check():
+    if is_virtual_machine():
+        return (False, "Can't get the pending sectors for your SSDs as this is a virtual machine.")
+
     failure_data = []
     for drive in get_drives():
         result = subprocess.run(
