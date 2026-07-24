@@ -48,83 +48,55 @@ def translate_report(report: dict):
     return translation
 
 def find_dbus_socket():
-    original_user = os.environ.get('SUDO_USER')
-    if not original_user:
-        logging.info("Not running under sudo, using current user")
-        original_user = os.environ.get('USER')
-    
-    dbus_addr = None
-    
-    # Try to get it from the user's environment
-    if original_user:
-        try:
-            result = subprocess.run(
-                ['sudo', '-u', original_user, 'bash', '-c', 
-                 'echo $DBUS_SESSION_BUS_ADDRESS'],
-                capture_output=True,
-                text=True
-            )
-            dbus_addr = result.stdout.strip()
-            if dbus_addr:
-                print(f"Found DBus address from user env: {dbus_addr}")
-                return dbus_addr, original_user
-        except Exception as err:
-            logging.info(f"Could not get DBus from user env", exc_info=err)
-
-    # If that fails, try to find the socket file
+    """
+    Find the graphical user's D-Bus session.
+    Systemd services run outside the user's desktop session, so we have to locate it.
+    """
     try:
-        # Get the user's UID
-        uid_result = subprocess.run(
-            ['id', '-u', original_user],
+        # Find logged in users
+        result = subprocess.run(
+            ["loginctl", "list-users", "--no-legend"],
             capture_output=True,
-            text=True
+            text=True,
+            check=True
         )
-        uid = uid_result.stdout.strip()
-        
-        # The socket should be in /run/user/{uid}/bus (maybe)
-        socket_path = f"/run/user/{uid}/bus"
-        if os.path.exists(socket_path):
-            dbus_addr = f"unix:path={socket_path}"
-            logging.info(f"Found DBus socket at: {socket_path}")
-            return dbus_addr, original_user
-            
-        # look for sockets in /tmp
-        tmp_sockets = glob.glob("/tmp/dbus-*")
-        if tmp_sockets:
-            # Usually the first one is the right one, but you might need
-            # to find the one owned by the user
-            for socket in tmp_sockets:
-                if os.path.exists(socket):
-                    dbus_addr = f"unix:path={socket}"
-                    print(f"Found DBus socket at: {socket}")
-                    return dbus_addr, original_user
-    except Exception as err:
-        logging.error("Error finding DBus socket", exc_info=err)
 
-    # It might be in the environment variables
-    dbus_addr = os.environ.get('DBUS_SESSION_BUS_ADDRESS')
-    if dbus_addr:
-        logging.info(f"Using DBus from current env: {dbus_addr}")
-        return dbus_addr, original_user
-    
+        for line in result.stdout.splitlines():
+            parts = line.split()
+            if len(parts) < 2:
+                continue
+
+            uid = parts[0]
+            username = parts[1]
+
+            # Ignore root
+            if username == "root":
+                continue
+
+            socket_path = f"/run/user/{uid}/bus"
+
+            if os.path.exists(socket_path):
+                dbus_addr = f"unix:path={socket_path}"
+                logging.info(
+                    f"Found desktop user '{username}' DBus socket: {dbus_addr}"
+                )
+                return dbus_addr, username
+
+    except Exception:
+        logging.exception("Failed finding graphical user's DBus session")
+
     logging.warning("Could not find DBus session address")
-    return None, original_user
+    return None, None
 
 def _gui_alert(report: dict):
     dbus_addr, original_user = find_dbus_socket()
+
+    if not original_user:
+        logging.warning("No graphical user session found, cannot send notification")
+        return
     
-    # Get the user's display
-    display = os.environ.get('DISPLAY')
-    if not display and original_user:
-        try:
-            result = subprocess.run(
-                ['sudo', '-u', original_user, 'bash', '-c', 'echo $DISPLAY'],
-                capture_output=True,
-                text=True
-            )
-            display = result.stdout.strip() or ':0'
-        except Exception:
-            display = ':0'
+    # Systemd does not inherit DISPLAY, assume first X session
+    display = os.environ.get("DISPLAY") or ":0"
     
     for check_disp_name in report:
         logging.info(f"Sending notification: {check_disp_name}")
@@ -141,7 +113,8 @@ def _gui_alert(report: dict):
         
         # Build command with explicit environment
         cmd = [
-            'sudo', '-u', original_user,
+            'runuser', '-u', original_user,
+            '--',
             'env',
             f'DISPLAY={display}',
             f'DBUS_SESSION_BUS_ADDRESS={dbus_addr}' if dbus_addr else '',
@@ -162,8 +135,10 @@ def _gui_alert(report: dict):
             # Fallback: try without DBUS_SESSION_BUS_ADDRESS
             try:
                 fallback_cmd = [
-                    'sudo', '-u', original_user,
-                    'env', f'DISPLAY={display}',
+                    'runuser', '-u', original_user,
+                    '--',
+                    'env',
+                    f'DISPLAY={display}',
                     'notify-send', '-u', 'critical', "Doctor's Report", check_warn_msg
                 ]
                 subprocess.run(fallback_cmd, check=False, capture_output=True)
