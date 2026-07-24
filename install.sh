@@ -51,7 +51,15 @@ echo "Found Python 3.13: $PYTHON_BIN"
 echo "Installing system dependencies..."
 
 apt update
-apt install -y libnotify-bin util-linux smartmontools git python3.13-venv
+apt install -y libnotify-bin util-linux smartmontools git
+
+echo "Checking venv support..."
+
+if ! "$PYTHON_BIN" -m venv --help &> /dev/null; then
+    echo "Error: Python 3.13 was found, but it does not have venv support."
+    echo "Install Python with the venv module included."
+    exit 1
+fi
 
 # Clone repository
 if [ -f "$INSTALL_DIR/main.py" ]; then
@@ -94,6 +102,14 @@ echo "Installing Python dependencies..."
 
 "${INSTALL_DIR}/venv/bin/python" -m pip install --upgrade pip
 "${INSTALL_DIR}/venv/bin/pip" install -r "${INSTALL_DIR}/requirements.txt"
+
+echo "Installing 'doctor' command wrapper..."
+
+cat << 'EOF' > /usr/local/bin/doctor
+#!/usr/bin/env bash
+exec "/opt/doctor/venv/bin/python" /opt/doctor/main.py "$@"
+EOF
+chmod +x /usr/local/bin/doctor
 
 # Check if systemd is installed
 if ! command -v systemctl &> /dev/null; then

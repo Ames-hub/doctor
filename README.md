@@ -17,6 +17,11 @@ curl -fsSL https://raw.githubusercontent.com/ames-hub/doctor/main/install.sh | s
 ```
 If you wish to review what this command does, please see in the project root: `./install.sh`
 
+# Commands
+To run a scan manually instead of once every 12 hours, you can run:
+`doctor --scannnow`
+Anywhere in the terminal
+
 # Requirements
 ### Systemd
 Doctor is intended as a systemd daemon, however it can be deployed using other systems. However, if other systems are used (such as OpenRC or Runit) I will not guarantee that it will run. This has only been tested as a Systemd service. If it CAN run, it will not run at full quality of performance because it has some systemd only checks.
@@ -25,6 +30,7 @@ Doctor uses Journalctl to discover various bits of system information, and is th
 ### Python3.13
 This program requires Python3.13.<br>
 Otherwise, `setup.sh` should install anything else needed.
+I recommend installing python3.13 using Linuxbrew, as that's what I use on all my devices.
 ### Super-user access
 As this system checks things like if the Kernel needs updating, it is required that this program runs as root. Either that, or you can delete the file "./checks/kernel_update.py" (and any others that need super user access)
 ### Notify-send package
