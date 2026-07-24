@@ -41,11 +41,6 @@ if ! "$PYTHON_BIN" -m venv "${INSTALL_DIR}/venv"; then
     exit 1
 fi
 
-echo "Installing Python dependencies..."
-
-"${INSTALL_DIR}/venv/bin/python" -m pip install --upgrade pip
-"${INSTALL_DIR}/venv/bin/pip" install -r "${INSTALL_DIR}/requirements.txt"
-
 # Install dependencies
 echo "Installing system dependencies..."
 
@@ -80,6 +75,11 @@ else
     echo "Cloning repository..."
     git clone "https://${REPO_URL}" "$INSTALL_DIR"
 fi
+
+echo "Installing Python dependencies..."
+
+"${INSTALL_DIR}/venv/bin/python" -m pip install --upgrade pip
+"${INSTALL_DIR}/venv/bin/pip" install -r "${INSTALL_DIR}/requirements.txt"
 
 # Check if systemd is installed
 if ! command -v systemctl &> /dev/null; then
