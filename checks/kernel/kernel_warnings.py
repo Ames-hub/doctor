@@ -3,7 +3,7 @@ import subprocess
 import shutil
 
 DISPLAY_NAME = "Kernel warnings check"
-LEVEL = 1
+LEVEL = 4  # Its rare a kernel warning will be of concern to the user.
 
 def check():
     """

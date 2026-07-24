@@ -4,6 +4,7 @@ import subprocess
 import logging
 import shutil
 import glob
+import sys
 import os
 
 def translate_report(report: dict):
@@ -17,11 +18,14 @@ def translate_report(report: dict):
         check_name = item[0]
         value = item[1]
 
+        if check_name == "pc_uuid4":
+            continue  # that's an identifier for HUB mode, not a check. Ignore it.
+
         if value is True:
             # Check passed, skip.
             continue
 
-        if isinstance(value, tuple):
+        if isinstance(value, list):
             # It failed, and returned multiple values
             translation[check_name] = []
             for result in value:
@@ -31,19 +35,17 @@ def translate_report(report: dict):
                     translation[check_name].append(detail)
                 else:
                     logging.warning(f"'{check_name}' returned a tuple when the check had successfully passed, this is not standard behavior.")
+        elif isinstance(value, tuple):
+            # It failed, and returned one detail.
+            translation[check_name] = value
         elif isinstance(value, bool):
             translation[check_name] = value
         else:
             # Not tuple or bool
-            logging.warning(f"'{check_name}' returned neither a boolean or a tuple in its result!")
+            logging.warning(f"'{check_name}' returned neither a boolean or a list of tuple in its result! Got `{value}`")
             continue
 
     return translation
-
-import os
-import subprocess
-import glob
-import shutil
 
 def find_dbus_socket():
     original_user = os.environ.get('SUDO_USER')
@@ -133,8 +135,18 @@ async def alert_user(report: dict):
         except Exception:
             display = ':0'
     
-    for problem in report:
-        print(f"Sending notification: {problem}")
+    for check_disp_name in report:
+        logging.info(f"Sending notification: {check_disp_name}")
+
+        check_warn_msg = f"'{check_disp_name}' check failed!"
+        if type(report[check_disp_name]) is list:
+            check_warn_msg += "\n"
+            problems = report[check_disp_name]
+            for problem in problems:
+                check_warn_msg += f"{problem}\n"
+        elif type(report[check_disp_name]) is tuple:
+            check_warn_msg += "\n"
+            check_warn_msg += report[check_disp_name][1]  # Include the detail at the end
         
         # Build command with explicit environment
         cmd = [
@@ -142,26 +154,27 @@ async def alert_user(report: dict):
             'env',
             f'DISPLAY={display}',
             f'DBUS_SESSION_BUS_ADDRESS={dbus_addr}' if dbus_addr else '',
-            'notify-send', '-u', 'critical', "Doctor's Report", problem
+            'notify-send', '-u', 'critical', "Doctor's Report", check_warn_msg
         ]
         # Remove empty strings from cmd
         cmd = [arg for arg in cmd if arg]
         
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-            print(f"Notification sent successfully")
-        except subprocess.CalledProcessError as e:
-            print(f"Notification failed with exit code {e.returncode}")
-            print(f"stderr: {e.stderr}")
-            print(f"stdout: {e.stdout}")
+            if "--debug" not in sys.argv:
+                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            logging.info(f"Notification for check '{check_disp_name}' sent successfully")
+        except subprocess.CalledProcessError as err:
+            logging.error(f"Notification failed with exit code {err.returncode}, using fallback", exc_info=err)
+            logging.error(f"stderr: {err.stderr}")
+            logging.error(f"stdout: {err.stdout}")
             
             # Fallback: try without DBUS_SESSION_BUS_ADDRESS
             try:
                 fallback_cmd = [
                     'sudo', '-u', original_user,
                     'env', f'DISPLAY={display}',
-                    'notify-send', '-u', 'critical', "Doctor's Report", problem
+                    'notify-send', '-u', 'critical', "Doctor's Report", check_warn_msg
                 ]
                 subprocess.run(fallback_cmd, check=False, capture_output=True)
-            except Exception:
-                print("Fallback notification also failed")
+            except Exception as err:
+                logging.error("Fallback notification also failed", exc_info=err)

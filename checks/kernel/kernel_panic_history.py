@@ -3,7 +3,7 @@ import subprocess
 import shutil
 
 DISPLAY_NAME = "Kernel panic/oops history"
-LEVEL = 2
+LEVEL = 4  
 
 def check():
     """

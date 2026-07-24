@@ -3,7 +3,7 @@ import subprocess
 import shutil
 
 DISPLAY_NAME = "Kernel panic check"
-LEVEL = 1
+LEVEL = 1  # This checks if the last boot was for a kernel panic.
 
 def check():
     """
@@ -14,7 +14,7 @@ def check():
     if shutil.which("journalctl") is None:
         raise errors.missing_journalctl
 
-    logs = subprocess.run(["journalctl", "-b", "-1", "-k", "--no-pager"], capture_output=True, text=True).lower()
+    logs = subprocess.run(["journalctl", "-b", "-1", "-k", "--no-pager"], capture_output=True, text=True).stdout.lower()
 
     panic_indicators = [
         "kernel panic",

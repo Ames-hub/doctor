@@ -13,5 +13,8 @@ def check():
     if shutil.which("systemctl") is None:
         raise errors.missing_systemctl
     result = subprocess.run(["systemctl", "--failed", "--no-legend"], capture_output=True, text=True)
-    failed_units = str(result).strip().splitlines()
-    return len(failed_units) == 0
+    failed_units = result.stdout.strip().splitlines()
+
+    units_have_failed = not len(failed_units) == 0
+    if units_have_failed:
+        return (False, "Systemctl services have failed. Please investigate.")

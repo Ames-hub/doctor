@@ -23,33 +23,35 @@ logging.basicConfig(
 
 is_hub = settings.HubMode().get()
 
-def ensure_root():
+def check_root():
     # os.geteuid() returns the effective User ID of the current process
     if os.geteuid() != 0:
-        logging.error("This script must be run as root or with sudo.")
-        sys.exit(1)
+        logging.warning("This script was designed to be run as root or with sudo.")
 
 def is_running_under_systemd():
     # systemd sets INVOCATION_ID or JOURNAL_STREAM for its services
     return "INVOCATION_ID" in os.environ or "JOURNAL_STREAM" in os.environ
 
 if not is_running_under_systemd():
-    logging.warning("Doctor was built to run as a systemd Daemon, but we have detected we are not running as one, or the Systemd version is older than v231, in which.")
+    logging.warning("Doctor was built to run as a systemd Daemon, but we have detected we are not running as one, or the Systemd version is older than v231, in which case, please ignore this message.")
 
 async def main_loop():
     HALF_DAY = 43200
-    try:
-        while True:
-            system_report = doctor.diagnose()
-            translation = ui.translate_report(system_report)
-            await ui.alert_user(translation)
-            await asyncio.sleep(HALF_DAY)
-    except KeyboardInterrupt:
-        return True
+    while True:
+        logging.info(f"Beginning a check at timestamp {datetime.datetime.now().timestamp()}")
+        system_report = doctor.diagnose()
+        translation = ui.translate_report(system_report)
+        await ui.alert_user(translation)
+        logging.info(f"Check concluded at timestamp {datetime.datetime.now().timestamp()}")
+        await asyncio.sleep(HALF_DAY)
 
 if is_hub:
     raise NotImplementedError("HUB Mode is not yet finished.")
 else:
-    asyncio.run(main_loop())
-    logging.info("Shutdown signal received. Shutting down.")
-    exit(0)
+    if "--debug" not in sys.argv:
+        check_root()
+    try:
+        asyncio.run(main_loop())
+    except KeyboardInterrupt:
+        logging.info("Shutdown signal received. Shutting down.")
+        exit(0)

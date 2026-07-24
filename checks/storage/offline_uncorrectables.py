@@ -17,7 +17,7 @@ def check():
             if "Offline_Uncorrectable" in line:
                 value = int(line.split()[-1])
                 if value > 0:
-                    failure_data.append(False, f"The amount offline, uncorrectable sectors in {drive} is not 0. Please investigate, or replace drive.")
+                    failure_data.append((False, f"The amount offline, uncorrectable sectors in {drive} is not 0. Please investigate, or replace drive."))
 
     if failure_data:
         return failure_data

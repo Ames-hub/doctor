@@ -3,7 +3,7 @@ import subprocess
 import shutil
 
 DISPLAY_NAME = "Failed system services"
-LEVEL = 1
+LEVEL = 3
 
 def check():
     """
@@ -20,5 +20,7 @@ def check():
     )
 
     failed = result.stdout.strip()
+    has_failed = not failed == ""
 
-    return failed == ""
+    if has_failed:
+        return (False, "Systemd services have recently failed. Recommend investigation.")

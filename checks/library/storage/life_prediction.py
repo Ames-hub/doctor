@@ -72,7 +72,8 @@ class drive:
     def calculate_days_monitored(self):
         oldest = self.get_history(limit=1, newest_first=False)
         if oldest:
-            oldest_date = datetime.datetime.fromtimestamp(oldest[0].timestamp)
+            oldest_date = oldest[0].timestamp
+            oldest_date = datetime.datetime.fromtimestamp(oldest_date)
             days_monitored = (datetime.datetime.now() - oldest_date).days
         else:
             days_monitored = 0
@@ -123,8 +124,14 @@ class drive:
             last_value = item.value
         
         total_drop = sum(value_drops)
-        wear_per_day = total_drop / self.calculate_days_monitored()
+        days_monitored = self.calculate_days_monitored()
         # Prevents divide by 0
+        if days_monitored == 0 or total_drop == 0:
+            return None
+        else:
+            wear_per_day = total_drop / days_monitored
+
+        # Prevents divide by 0. Again.
         if wear_per_day <= 0:
             return None
         

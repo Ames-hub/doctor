@@ -3,7 +3,7 @@ import subprocess
 import shutil
 
 DISPLAY_NAME = "Service startup performance"
-LEVEL = 3
+LEVEL = 4
 
 def check():
     """
@@ -42,4 +42,8 @@ def check():
         except:
             continue
 
-    return len(slow_services) == 0
+    slow_startups = not len(slow_services) == 0
+    if slow_startups:
+        return (False, "Systemd services are taking a while to start up. Recommend investigation.")
+    else:
+        return True

@@ -3,7 +3,7 @@ import subprocess
 import shutil
 
 DISPLAY_NAME = "Service failures"
-LEVEL = 2
+LEVEL = 3
 
 def check():
     """
@@ -17,7 +17,7 @@ def check():
         [
             "journalctl",
             "-p",
-            "err"
+            "err",
             "--since",
             "30 days ago",
             "--no-pager",
@@ -37,6 +37,6 @@ def check():
 
     for failure in failures:
         if failure in logs:
-            return False
+            return (False, "System services have failed recently. Recommend investigation.")
 
     return True

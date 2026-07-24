@@ -1,28 +1,19 @@
 from checks.library.storage.helpers import get_drives
-from library import errors
-import subprocess
 import shutil
+import os
 
 DISPLAY_NAME = "Disk Space Usage"
-LEVEL = 3
+LEVEL = 3  # Yellow-flag
 
 def check():
     """Check disk usage for all mounted partitions"""
     drives = get_drives()
     issues = []
 
-    if shutil.which("dmesg") is None:
-        raise errors.missing_dmesg
-
     for drive in drives:
         try:
             # Get mount point for this drive
-            result = subprocess.run(
-                ["lsblk", "-no", "MOUNTPOINT", drive],
-                capture_output=True,
-                text=True,
-            ).stdout.strip()
-            
+            result = os.popen(f"lsblk -no MOUNTPOINT {drive} 2>/dev/null").read().strip()
             if not result:
                 continue  # Skip drives that don't have mount points
 

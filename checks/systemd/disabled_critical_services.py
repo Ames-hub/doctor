@@ -1,3 +1,4 @@
+from library.settings import settings
 from library import errors
 import subprocess
 import shutil
@@ -17,9 +18,12 @@ def check():
         "systemd-journald",
         "systemd-logind",
         "NetworkManager",
-        "ssh"
     ]
 
+    extra_crit_services = settings.extra_critical_services().get()
+    critical_services.extend(extra_crit_services)
+
+    problems = []
     for service in critical_services:
         result = subprocess.run(
             [
@@ -32,6 +36,9 @@ def check():
         )
 
         if result.stdout.strip() not in ["enabled", "static"]:
-            return False
+            problems.append((False, f"Critical system service \"{service}\" is not running!"))
+
+    if problems:
+        return problems
 
     return True

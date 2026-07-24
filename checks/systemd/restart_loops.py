@@ -28,6 +28,6 @@ def check():
 
     # Services stuck activating often indicate restart loops
     if services.strip():
-        return False
+        return (False, "Services are repeatedly restarting over and over. Recommend investigation.")
 
     return True

@@ -9,9 +9,10 @@ def check():
     Returns True if intentional, False if crash/power loss.
     """
 
-    logs = str(subprocess.run(["last", "-x"], capture_output=True, text=True)).lower()
+    result = subprocess.run(["last", "-x"], capture_output=True, text=True)
+    logs = result.stdout.lower()
 
     if "shutdown" in logs:
         return True
 
-    return False
+    return (False, "Last power-off was not expected.")

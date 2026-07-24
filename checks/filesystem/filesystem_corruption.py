@@ -1,7 +1,5 @@
 from checks.library.storage.helpers import get_drives
-from library import errors
 import subprocess
-import shutil
 import os
 
 DISPLAY_NAME = "Filesystem Corruption"
@@ -11,11 +9,6 @@ def check():
     """Check for filesystem corruption on all drives"""
     drives = get_drives()
     issues = []
-
-    if shutil.which("dmesg") is None:
-        raise errors.missing_dmesg
-    if shutil.which("journalctl") is None:
-        raise errors.missing_journalctl
 
     corruption_keywords = [
         'corruption',

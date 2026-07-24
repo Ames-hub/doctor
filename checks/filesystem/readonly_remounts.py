@@ -1,21 +1,16 @@
 from checks.library.storage.helpers import get_drives
-from library import errors
 import subprocess
-import shutil
 import re
 import os
 
 DISPLAY_NAME = "Filesystem Read-Only Remounts"
-LEVEL = 2
+LEVEL = 2  # Orange-flag
 
 def check():
     """Check if any filesystem has been remounted read-only due to errors"""
     drives = get_drives()
     issues = []
-
-    if shutil.which("dmesg") is None:
-        raise errors.missing_dmesg
-
+    
     try:
         # Get dmesg output once
         result = subprocess.run(['dmesg'], capture_output=True, text=True)

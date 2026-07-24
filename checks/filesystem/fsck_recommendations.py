@@ -4,13 +4,13 @@ import os
 import re
 
 DISPLAY_NAME = "fsck Recommendations"
-LEVEL = 1
+LEVEL = 1  # Red-flag
 
 def check():
     """Check if filesystems need fsck (filesystem check) on all drives"""
     drives = get_drives()
     issues = []
-
+    
     for drive in drives:
         try:
             drive_name = os.path.basename(drive)

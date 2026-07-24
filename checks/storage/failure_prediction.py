@@ -17,10 +17,11 @@ def check():
         drive = drv(drive_name)
 
         data = drive.get_current_life()
-        last_record_date = datetime.fromtimestamp(data.timestamp)
-        if last_record_date.strftime("%d-%m-%Y") == datetime.now().strftime("%d-%m-%Y"):
-            # If a record was already taken today, skip
-            return True
+        if data:
+            last_record_date = datetime.fromtimestamp(data.timestamp)
+            if last_record_date.strftime("%d-%m-%Y") == datetime.now().strftime("%d-%m-%Y"):
+                # If a record was already taken today, skip
+                return True
 
         result = subprocess.run(
             ["smartctl", "-A", "/dev/sda"],
@@ -40,7 +41,7 @@ def check():
         days_left = drive.predict_life()
 
         if days_left <= 90:
-            failure_data.append((False, f"It is predicted that drive {drive.drive_id} will fail in {days_left} days, we recommend replacement."))
+            failure_data.append((False, f"It is predicted that drive {drive.drive_id} will fail in {days_left} days, recommend replacement."))
 
     if not failure_data:
         return True

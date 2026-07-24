@@ -57,3 +57,13 @@ class settings:
     class headless(BaseSetting):
         def __init__(self):
             super().__init__("headless", False)
+    # This setting is for critical services that are not included in the original list.
+    class extra_critical_services(BaseSetting):
+        def __init__(self):
+            super().__init__("extra_critical_services", [])
+
+        def append(self, value: str):
+            data: dict = file.read()
+            if not self.name in data.keys():
+                data[self.name] = []
+            data[self.name].append(value)

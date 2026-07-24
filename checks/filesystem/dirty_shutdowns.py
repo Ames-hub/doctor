@@ -1,20 +1,15 @@
 from checks.library.storage.helpers import get_drives
-from library import errors
 import subprocess
-import shutil
 import re
 import os
 
 DISPLAY_NAME = "Dirty Shutdowns Detection"
-LEVEL = 2
+LEVEL = 2  # Orange-flag
 
 def check():
     drives = get_drives()
     issues = []
-
-    if shutil.which("dmesg") is None:
-        raise errors.missing_dmesg
-
+    
     try:
         result = subprocess.run(['dmesg'], capture_output=True, text=True, timeout=10)
         dmesg_output = result.stdout
@@ -45,3 +40,8 @@ def check():
                 issues.append((False, f"Unclean shutdown detected on {drive}: {matches[0][:100]}"))
     except Exception as e:
         return (False, f"Could not check for dirty shutdowns: {str(e)}")
+
+    if issues:
+        return issues
+
+    return True

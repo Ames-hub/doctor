@@ -11,6 +11,6 @@ def check():
 
     errors = str(subprocess.run(["journalctl", "-b", "-p", "err", "--no-pager"], capture_output=True, text=True)).splitlines()
     if not len(errors) == 0:
-        return False
+        return (False, "There were problems during bootup, recommend investigation using `journalctl -b -p err`.")
     else:
         return True
