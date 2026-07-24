@@ -12,10 +12,30 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# Check Python version
+echo "Checking Python version..."
+
+if ! command -v python3 &> /dev/null; then
+    echo "Error: Python 3 is not installed."
+    exit 1
+fi
+
+PYTHON_VERSION=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
+PYTHON_MAJOR=$(echo "$PYTHON_VERSION" | cut -d. -f1)
+PYTHON_MINOR=$(echo "$PYTHON_VERSION" | cut -d. -f2)
+
+if [ "$PYTHON_MAJOR" -lt 3 ] || { [ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -lt 13 ]; }; then
+    echo "Error: Python 3.13 or newer is required."
+    echo "Installed version: Python $PYTHON_VERSION"
+    exit 1
+fi
+
+echo "Python $PYTHON_VERSION detected. Sufficient."
+
 # Install notify-send, dmesg and smartctl
 echo "Installing dependencies..."
 apt update
-apt install -y libnotify-bin util-linux smartmontools, git
+apt install -y libnotify-bin util-linux smartmontools git
 
 # Clone the repository to /opt/doctor (handle existing install)
 if [ -d "$INSTALL_DIR" ]; then
