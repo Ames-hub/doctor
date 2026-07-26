@@ -1,7 +1,10 @@
 from library.settings import settings
+from library.database import get_db
 from datetime import datetime
+from library import models 
 from library import errors
 import importlib
+import asyncio
 import logging
 import os
 
@@ -58,3 +61,41 @@ def diagnose() -> dict:
     diagnosis["pc_uuid4"] = settings.pc_uuid4().get()
 
     return diagnosis
+
+tasks_list = []
+
+def register_task(rel_filepath: str):
+    module_name = rel_filepath[:-3]
+    try:
+        module = importlib.import_module(module_name)
+    except Exception as err:
+        logging.error(f"Error importing a task! Module name: {module_name}", exc_info=err)
+        return False
+    if hasattr(module, "check"):
+        tasks_list.append((module.task, module.CLOCK))
+    return True
+
+for checks_root, _, files in os.walk("checks"):
+    for file in files:
+        if file.endswith(".py") and file != "__init__.py":
+            try:
+                path = os.path.join(checks_root, file).replace("/", ".")
+                register_task(path)
+            except Exception as err:
+                logging.error(f"TASK LOAD ERROR: when attempting to load a task at \"{path}\"", exc_info=err)
+                continue
+
+def get_last_exec(func_id) -> datetime:
+    with get_db() as session:
+        query = session.query(
+            models.task_execution
+        )
+
+async def tasks_loop():
+    for task in tasks_list:
+        func = task[0]
+        clock = task[1]
+        last_execution = get_last_exec(func)
+
+        if clock > last_execution:
+            func()

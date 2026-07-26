@@ -11,3 +11,9 @@ class boot_drive_health(Base):
     timestamp = Column(BigInteger)  # If we use TIMESTAMP, it saves it as a datetime. For our purposes, its easier to store as an int.
     value = Column(Integer)
     days_monitored = Column(Integer)  # How many days we've monitored this drive for
+
+class task_execution(Base):
+    __tablename__ = "task_executions"
+
+    uuid = Column(String, primary_key=True)
+    time = Column(BigInteger)
