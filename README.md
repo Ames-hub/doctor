@@ -32,7 +32,7 @@ Simply go to the project root directory and run the `uninstall.sh` file as root.
 
 # Commands
 To run a scan manually instead of once every 12 hours, you can run:
-`doctor --scannnow`
+`doctor --scannow`
 Anywhere in the terminal
 
 # Requirements
