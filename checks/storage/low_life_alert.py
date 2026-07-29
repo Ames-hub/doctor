@@ -1,6 +1,5 @@
-from checks.library.storage.helpers import get_drives
+from checks.library.storage.helpers import get_drives, get_life_left
 from checks.library.helpers import is_virtual_machine
-import subprocess
 
 DISPLAY_NAME = "Drive Low-Life Alert"
 LEVEL = 1
@@ -17,18 +16,7 @@ def check():
 
     failure_data = []
     for drive in get_drives():
-        result = subprocess.run(
-            ["smartctl", "-A", drive],
-            capture_output=True,
-            text=True
-        )
-
-        life_left = None
-
-        for line in result.stdout.splitlines():
-            if "Percent_Lifetime_Remain" in line:
-                life_left = int(line.split()[-1])
-                break
+        life_left = get_life_left(drive)
 
         if life_left is None:
             # This should not happen if the script is running as root.

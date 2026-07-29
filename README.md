@@ -17,6 +17,19 @@ curl -fsSL https://raw.githubusercontent.com/ames-hub/doctor/main/install.sh | s
 ```
 If you wish to review what this command does, please see in the project root: `./install.sh`
 
+## Offline install
+While this isn't truely offline, it does stop it from trying to clone the repository from github.
+This allows you to clone the repo, and simply install it from the already cloned repository.
+
+To do this, clone the repository, then run these commands in folder you downloaded it to.
+```
+sudo chmod +x ./install.sh
+sudo ./install.sh --offline
+```
+
+## Uninstallation
+Simply go to the project root directory and run the `uninstall.sh` file as root.
+
 # Commands
 To run a scan manually instead of once every 12 hours, you can run:
 `doctor --scannnow`

@@ -1,7 +1,6 @@
+from checks.library.storage.helpers import get_drives, get_life_left
 from checks.library.storage.life_prediction import drive as drv
-from checks.library.storage.helpers import get_drives
 from checks.library.helpers import is_virtual_machine
-import subprocess
 from datetime import datetime
 
 DISPLAY_NAME = "Boot Drive Failure Prediction"
@@ -27,25 +26,14 @@ def check():
                 # If a record was already taken today, skip
                 return True
 
-        result = subprocess.run(
-            ["smartctl", "-A", "/dev/sda"],
-            capture_output=True,
-            text=True
-        )
-
-        life_left = None
-
-        # Gets the line that reads out the lifetime remaining
-        for line in result.stdout.splitlines():
-            if "Percent_Lifetime_Remain" in line:
-                life_left = int(line.split()[-1])
-                break
+        life_left = get_life_left(drive_name)
 
         drive.save_current_life(life_left)
         days_left = drive.predict_life()
 
-        if days_left <= 90:
-            failure_data.append((False, f"It is predicted that drive {drive.drive_id} will fail in {days_left} days, recommend replacement."))
+        if days_left:
+            if days_left <= 90:
+                failure_data.append((False, f"It is predicted that drive {drive.drive_id} will fail in {days_left} days, recommend replacement."))
 
     if not failure_data:
         return True

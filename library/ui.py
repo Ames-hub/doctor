@@ -1,5 +1,5 @@
 from library.settings import settings
-from library import errors
+from library import errors, doctor
 import subprocess
 import logging
 import shutil
@@ -90,6 +90,10 @@ def find_dbus_socket():
 
 def _gui_alert(report: dict):
     dbus_addr, original_user = find_dbus_socket()
+
+    if not doctor.is_root():
+        logging.warning("Must be running as root to send UI Alerts.")
+        return False
 
     if not original_user:
         logging.warning("No graphical user session found, cannot send notification")

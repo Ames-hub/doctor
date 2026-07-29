@@ -1,15 +1,19 @@
+from datetime import datetime, timedelta
 from library.settings import settings
 from library.database import get_db
-from datetime import datetime
+from sqlalchemy import delete
 from library import models 
 from library import errors
 import importlib
-import asyncio
 import logging
 import os
 
 checks = []
 PROJ_ROOT = os.getcwd()
+
+def is_root():
+    # os.geteuid() returns the effective User ID of the current process
+    return os.geteuid() == 0
 
 def register_check(rel_filepath: str):
     module_name = rel_filepath[:-3]
@@ -23,7 +27,10 @@ def register_check(rel_filepath: str):
         if module.LEVEL > verbosity:
             # This check is too verbose for the user's settings, do not register it.
             raise errors.too_verbose
-        checks.append((module.check, module.DISPLAY_NAME))
+        try:
+            checks.append((module.check, module.DISPLAY_NAME))
+        except AttributeError as err:
+            logging.error("Error loading check, missing required variables in file", exc_info=err)
     return True
 
 for checks_root, _, files in os.walk("checks"):
@@ -71,11 +78,15 @@ def register_task(rel_filepath: str):
     except Exception as err:
         logging.error(f"Error importing a task! Module name: {module_name}", exc_info=err)
         return False
-    if hasattr(module, "check"):
-        tasks_list.append((module.task, module.CLOCK))
+    if hasattr(module, "task"):
+        try:
+            tasks_list.append((module.task, module.CLOCK, module.TASK_ID))
+        except AttributeError as err:
+            logging.error("Error importing a task! Missing required variables inside file", exc_info=err)
+            return False
     return True
 
-for checks_root, _, files in os.walk("checks"):
+for checks_root, _, files in os.walk("tasks"):
     for file in files:
         if file.endswith(".py") and file != "__init__.py":
             try:
@@ -87,15 +98,47 @@ for checks_root, _, files in os.walk("checks"):
 
 def get_last_exec(func_id) -> datetime:
     with get_db() as session:
-        query = session.query(
-            models.task_execution
+        data = (
+            session.query(models.task_execution)
+            .filter(models.task_execution.uuid == func_id)
+            .one_or_none()
         )
+        if data:
+            return datetime.fromtimestamp(data.time)
+        return None
+
+def save_last_exec(func_id) -> bool:
+    with get_db() as session:
+        session.execute(
+            delete(models.task_execution)
+            .where(models.task_execution.uuid == func_id)
+        )
+        record = models.task_execution(
+            time=int(datetime.now().timestamp()),
+            uuid=func_id
+        )
+        session.add(record)
+        session.commit()
+    return True
 
 async def tasks_loop():
+    if not is_root():
+        logging.warning("Warning, no tasks are running as root. This may cause misbehavior with checks.")
     for task in tasks_list:
         func = task[0]
-        clock = task[1]
-        last_execution = get_last_exec(func)
+        clock: timedelta = task[1]
+        func_id = task[2]
+        last_execution = get_last_exec(func_id)
 
-        if clock > last_execution:
+        do_run = False
+
+        if not last_execution:
+            do_run = True
+        else:
+            time_gap = datetime.now() - last_execution
+            if (time_gap.total_seconds() - clock.total_seconds()) <= 0:
+                do_run = True
+
+        if do_run:
             func()
+            save_last_exec(func_id)

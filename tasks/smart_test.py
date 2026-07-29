@@ -4,18 +4,17 @@ import subprocess
 import uuid
 
 CLOCK = timedelta(days=15)
-UUID = str(uuid.uuid4())
+TASK_ID = "c12715e1-e71f-4be8-9e1d-9053e73af258"
 
-def check():
+def task():
     # These tests will be collected by check "self-test fail"
     for drive in get_drives():
-        if datetime.now().day > 15:
-            # Run a, long thorough self-test once per month
-            subprocess.run(
-                ["smartctl", "-t", "long", drive]
-            )
-        else:
-            # Run short, quick test once per month
-            subprocess.run(
-                ["smartctl", "-t", "short", drive]
-            )
+        is_short_test = datetime.now().day > 15
+        test_type = "short" if is_short_test else "long"
+        
+        # Run a, long thorough self-test once per month
+        # Run short, quick test once per month
+        subprocess.run(
+            ["smartctl", "-t", test_type, drive],
+            stdout=subprocess.DEVNULL
+        )

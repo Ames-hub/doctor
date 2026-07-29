@@ -10,12 +10,11 @@ import json
 import sys
 import os
 
-def is_root():
-    # os.geteuid() returns the effective User ID of the current process
-    return os.geteuid() == 0
-
 # Handle a CLI-triggered manual scan before any daemon setup runs
 if "--scannow" in sys.argv:
+    if not doctor.is_root():
+        print("This command must be ran as root.")
+        exit(126)
     async def _scannow_client():
         try:
             result = await ipc.send_scannow_request()
@@ -24,7 +23,7 @@ if "--scannow" in sys.argv:
             print("Could not reach the Doctor daemon. Is the systemd service running?")
             sys.exit(1)
 
-    if not is_root():
+    if not doctor.is_root():
         print("This command must be ran as root.")
         sys.exit(0)
 
@@ -73,16 +72,24 @@ async def main_loop():
         await asyncio.sleep(HALF_DAY)
 
 async def run_daemon():
-    await asyncio.gather(
-        main_loop(),
-        ipc.run_server(run_scan)
-    )
+    if doctor.is_root():
+        await asyncio.gather(
+            main_loop(),
+            ipc.run_server(run_scan),
+            doctor.tasks_loop()
+        )
+    else:
+        logging.warning("Doctor is not running as root, command line commands will not work.")
+        await asyncio.gather(
+            main_loop(),
+            doctor.tasks_loop()
+        )
 
 if is_hub:
     raise NotImplementedError("HUB Mode is not yet finished.")
 else:
     if "--debug" not in sys.argv:
-        if not is_root():
+        if not doctor.is_root():
             logging.warning("This script was designed to be run as root or with sudo.")
     try:
         asyncio.run(run_daemon())

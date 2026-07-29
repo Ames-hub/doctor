@@ -6,6 +6,17 @@ INSTALL_DIR="/opt/doctor"
 SERVICE_NAME="doctor.service"
 SYSTEMD_DIR="/etc/systemd/system"
 
+SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+OFFLINE=false
+
+for arg in "$@"; do
+    case "$arg" in
+        --offline)
+            OFFLINE=true
+            ;;
+    esac
+done
+
 # Check if the script is ran as root
 if [ "$EUID" -ne 0 ]; then
     echo "This installer must be run as root. Try: sudo ./install.sh"
@@ -51,7 +62,7 @@ echo "Found Python 3.13: $PYTHON_BIN"
 echo "Installing system dependencies..."
 
 apt update
-apt install -y libnotify-bin util-linux smartmontools git
+apt install -y libnotify-bin util-linux smartmontools git rsync
 
 echo "Checking venv support..."
 
@@ -64,21 +75,37 @@ fi
 # Clone repository
 if [ -f "$INSTALL_DIR/main.py" ]; then
     echo "$INSTALL_DIR already exists."
-    echo "1) Clean reinstall (delete and re-clone)"
-    echo "2) Update (pull latest changes)"
+    if [ "$OFFLINE" = true ]; then
+        echo "1) Clean reinstall (delete and copy from local directory)"
+        echo "2) Update (copy latest changes from local directory)"
+    else
+        echo "1) Clean reinstall (delete and re-clone)"
+        echo "2) Update (pull latest changes)"
+    fi
     read -rp "Choose an option [1/2]: " EXISTING_CHOICE
 
     case "$EXISTING_CHOICE" in
         1)
             echo "Removing existing installation..."
             rm -rf "$INSTALL_DIR"
+            mkdir -p "$INSTALL_DIR"
 
-            echo "Cloning repository..."
-            git clone "https://${REPO_URL}" "$INSTALL_DIR"
+            if [ "$OFFLINE" = true ]; then
+                echo "Copying local repository..."
+                rsync -a --exclude='.git' --exclude='install.sh' --exclude='venv' "${SOURCE_DIR}/" "${INSTALL_DIR}/"
+            else
+                echo "Cloning repository..."
+                git clone "https://${REPO_URL}" "$INSTALL_DIR"
+            fi
             ;;
         2)
-            echo "Updating existing installation..."
-            git -C "$INSTALL_DIR" pull
+            if [ "$OFFLINE" = true ]; then
+                echo "Updating existing installation from local directory..."
+                rsync -a --exclude='.git' --exclude='install.sh' --exclude='venv' "${SOURCE_DIR}/" "${INSTALL_DIR}/"
+            else
+                echo "Updating existing installation..."
+                git -C "$INSTALL_DIR" pull
+            fi
             ;;
         *)
             echo "Invalid choice. Aborting."
@@ -86,8 +113,14 @@ if [ -f "$INSTALL_DIR/main.py" ]; then
             ;;
     esac
 else
-    echo "Cloning repository..."
-    git clone "https://${REPO_URL}" "$INSTALL_DIR"
+    if [ "$OFFLINE" = true ]; then
+        echo "Copying local repository..."
+        mkdir -p "$INSTALL_DIR"
+        rsync -a --exclude='.git' --exclude='install.sh' --exclude='venv' "${SOURCE_DIR}/" "${INSTALL_DIR}/"
+    else
+        echo "Cloning repository..."
+        git clone "https://${REPO_URL}" "$INSTALL_DIR"
+    fi
 fi
 
 echo "Creating Python virtual environment..."
