@@ -1,9 +1,8 @@
-from library import errors
 import subprocess
 import shutil
 
 DISPLAY_NAME = "Boot Errors Check"
-LEVEL = 1
+LEVEL = 4
 
 def check():
     if shutil.which("journalctl") is None:

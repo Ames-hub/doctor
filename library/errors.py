@@ -20,3 +20,6 @@ class unavailable_sys_info(Exception):
 class too_verbose(Exception):
     def __init__(self, *args):
         super().__init__(*args)
+class missing_pkg_manager(Exception):
+    def __init__(self, *args):
+        super().__init__(*args)

@@ -1,6 +1,5 @@
-from sqlalchemy import Column, Integer, BigInteger, String
+from sqlalchemy import Column, Integer, BigInteger, String, DateTime, Boolean
 from library.database import Base
-
 
 class boot_drive_health(Base):
     __tablename__ = "boot_drive_health"
@@ -16,4 +15,20 @@ class task_execution(Base):
     __tablename__ = "task_executions"
 
     uuid = Column(String, primary_key=True)
-    time = Column(BigInteger)
+    time = Column(BigInteger, nullable=False)
+
+class check_execution(Base):
+    __tablename__ = "check_executions"
+
+    run_id = Column(Integer, primary_key=True, autoincrement=True)
+    time = Column(BigInteger, nullable=False)
+    passed = Column(Boolean, nullable=False)
+    issues = Column(String, default=None)
+
+class client_health_reports(Base):
+    __tablename__ = "received_health_reports"
+
+    report_id = Column(Integer, autoincrement=True, primary_key=True)
+    device_uuid = Column(String, nullable=False)
+    date = Column(DateTime, nullable=False)
+    report = Column(String, nullable=False)

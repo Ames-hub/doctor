@@ -1,7 +1,6 @@
 from checks.library.storage.helpers import get_drives
 from datetime import timedelta, datetime
 import subprocess
-import uuid
 
 CLOCK = timedelta(days=15)
 TASK_ID = "c12715e1-e71f-4be8-9e1d-9053e73af258"

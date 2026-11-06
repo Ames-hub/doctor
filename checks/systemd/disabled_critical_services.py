@@ -20,7 +20,7 @@ def check():
         "NetworkManager",
     ]
 
-    extra_crit_services = settings.extra_critical_services().get()
+    extra_crit_services = settings.additional_crit_services().get()
     critical_services.extend(extra_crit_services)
 
     problems = []

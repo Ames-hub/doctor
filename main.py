@@ -1,6 +1,7 @@
 from library.database import create_tables
 from library.settings import settings
 from library import doctor
+from library import hub
 from library import ipc
 from library import ui
 import datetime
@@ -46,6 +47,7 @@ logging.basicConfig(
 )
 
 is_hub = settings.HubMode().get()
+is_client = settings.ClientMode().get()
 
 def is_running_under_systemd():
     # systemd sets INVOCATION_ID or JOURNAL_STREAM for its services
@@ -72,27 +74,30 @@ async def main_loop():
         await asyncio.sleep(HALF_DAY)
 
 async def run_daemon():
+    tasks = [
+        main_loop(),
+        doctor.tasks_loop()
+    ]
+
     if doctor.is_root():
-        await asyncio.gather(
-            main_loop(),
-            ipc.run_server(run_scan),
-            doctor.tasks_loop()
-        )
+        tasks.append(ipc.run_server(run_scan))
     else:
-        logging.warning("Doctor is not running as root, command line commands will not work.")
-        await asyncio.gather(
-            main_loop(),
-            doctor.tasks_loop()
+        logging.warning(
+            "Doctor is not running as root, command line commands will not work."
         )
 
-if is_hub:
-    raise NotImplementedError("HUB Mode is not yet finished.")
-else:
+    if is_hub:
+        tasks.append(hub.server.run())
+
+    await asyncio.gather(*tasks)
+
+if __name__ == "__main__":
     if "--debug" not in sys.argv:
         if not doctor.is_root():
             logging.warning("This script was designed to be run as root or with sudo.")
+
     try:
         asyncio.run(run_daemon())
     except KeyboardInterrupt:
         logging.info("Shutdown signal received. Shutting down.")
-        exit(0)
+        sys.exit(0)

@@ -5,11 +5,26 @@ from sqlalchemy import delete
 from library import models 
 from library import errors
 import importlib
+import platform
 import logging
+import shutil
 import os
 
 checks = []
 PROJ_ROOT = os.getcwd()
+
+def get_pkg_manager():
+    distro = platform.freedesktop_os_release().get("ID", "").lower()
+
+    if distro in ("ubuntu", "debian", "linuxmint"):
+        package_manager = "apt"
+    elif distro in ("fedora",):
+        package_manager = "dnf"
+    else:
+        raise RuntimeError(f"Unsupported distribution: {distro}")
+
+    if not shutil.which(package_manager):
+        raise errors.missing_pkg_manager(f"{package_manager} is not installed.")
 
 def is_root():
     # os.geteuid() returns the effective User ID of the current process
@@ -107,7 +122,7 @@ def get_last_exec(func_id) -> datetime:
             return datetime.fromtimestamp(data.time)
         return None
 
-def save_last_exec(func_id) -> bool:
+def save_last_exec(func_id: str) -> bool:
     with get_db() as session:
         session.execute(
             delete(models.task_execution)
@@ -115,7 +130,7 @@ def save_last_exec(func_id) -> bool:
         )
         record = models.task_execution(
             time=int(datetime.now().timestamp()),
-            uuid=func_id
+            uuid=func_id,
         )
         session.add(record)
         session.commit()

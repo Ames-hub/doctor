@@ -33,7 +33,7 @@ class BaseSetting:
         settings = file.read()
         settings[self.name] = value
         with open(SETTINGS_PATH, "w") as f:
-            json.dump(settings, f)
+            json.dump(settings, f, indent=4)
         return True
 
 class settings:
@@ -42,6 +42,10 @@ class settings:
     class HubMode(BaseSetting):
         def __init__(self):
             super().__init__("hub_mode", False)
+    # Determines if this service is meant to be a client to a hub.
+    class ClientMode(BaseSetting):
+        def __init__(self):
+            super().__init__("client_mode", False)
     # Determines what level of "pedanticness" doctor checks with.
     # At verbosity 4, even just the kernel being tainted by propriety nvidia drivers is checked for.
     class Verbosity(BaseSetting):
@@ -60,12 +64,22 @@ class settings:
         def __init__(self):
             super().__init__("unattended", False)
     # This setting is for critical services that are not included in the original list.
-    class extra_critical_services(BaseSetting):
+    class additional_crit_services(BaseSetting):
         def __init__(self):
-            super().__init__("extra_critical_services", [])
+            super().__init__("additional_crit_services", [])
 
         def append(self, value: str):
             data: dict = file.read()
             if not self.name in data.keys():
                 data[self.name] = []
             data[self.name].append(value)
+    class hub_server_host(BaseSetting):  # This is the full host used to connect to a server, port and all. Just without the "https://"
+        def __init__(self):
+            super().__init__("hub_server_host", None)
+    class hub_server_port(BaseSetting):
+        def __init__(self):
+            super().__init__("hub_server_port", 5899)
+    class enforce_https(BaseSetting):  # This is for client and server, toggles its insistence on HTTPS over HTTP.
+        def __init__(self):
+            super().__init__("enforce_https", False)
+    

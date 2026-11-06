@@ -2,7 +2,7 @@
 This readme is meant for project contributors. (If it gets any. If it does, thank you for your help)
 
 No plugin registration is needed, you simply create a python file to the following specifications below and it'll automatically begin running
-that check on restart.
+that check on restart. Yes, this should be secured in the future. For now, it's not.
 
 # Format
 The correct format to create another check is as follows:
@@ -24,9 +24,10 @@ Why? Because something as simple as proprietry nvidia drivers taint the kernel. 
 
 The recommended levels, in descending priority, are:
 1. Red-flags (things like "Kernel panic", "The BIOS is missing", "The CPU is currently reading 945 degrees celcius.")
-2. Orange-flags (things like "Systems been running for a long time")
-3. Yellow-flags (Things like "Packages could use an update")
-4. Green-flags (This is where "Kernel tainted" is)
+2. Orange-flags (things like "Systems been running for a long time", or "Packages could use an update")
+3. Yellow-flags (Potentially not-critical things that only servers really worried about real good stability would check.)
+4. Green-flags (This is where "Kernel tainted" is. Things that really do not affect the operation or performance of the OS and are of low importance.)
+Green flag checking is basically only useful for kernel developers. And I doubt any of them would be using this program.
 
 # What about "Severities"?
 Doctor is meant to be a basic system for predicting failures and providing accurate health diagnostics so you know where to look to fix stuff.

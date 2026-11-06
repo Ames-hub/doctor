@@ -1,5 +1,6 @@
 from library.settings import settings
 from library import errors, doctor
+from library import hub
 import subprocess
 import logging
 import shutil
@@ -149,7 +150,7 @@ def _gui_alert(report: dict):
             except Exception as err:
                 logging.error("Fallback notification also failed", exc_info=err)
 
-async def send_alert(report: dict):
+async def send_alert(report: dict) -> bool:
     """
     Sends alerts to the user's OS in a form of pop-up notifications.
     """
@@ -158,6 +159,7 @@ async def send_alert(report: dict):
             raise errors.missing_notifysend
         else:
             _gui_alert(report)
+            return True
     else:
-        raise NotImplementedError("HUB mode still needs to be implemented.")
-        
+        hub.client.send_health_report()
+        return True
